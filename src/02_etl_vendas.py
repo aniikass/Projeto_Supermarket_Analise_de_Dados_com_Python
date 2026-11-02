@@ -81,3 +81,20 @@ df["quantidade"] = df["quantidade"].astype("Int64")
 
 print("\nTipos das colunas numéricas:")
 print(df[colunas_numericas].dtypes)
+
+# Converte as datas: mês/dia/ano no arquivo de origem.
+df["data_venda"] = pd.to_datetime(
+    df["data_venda"],
+    format="%m/%d/%Y",
+    errors="raise",
+)
+
+# Converte horários com AM/PM para objetos de horário.
+df["hora_venda"] = pd.to_datetime(
+    df["hora_venda"],
+    format="%I:%M:%S %p",
+    errors="raise",
+).dt.time
+
+print("\nDatas e horários convertidos:")
+print(df[["id_venda", "data_venda", "hora_venda"]].head())
