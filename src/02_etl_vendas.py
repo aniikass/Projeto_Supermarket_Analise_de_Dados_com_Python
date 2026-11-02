@@ -1,6 +1,12 @@
-from pathlib import Path
+import os
 
 import pandas as pd
+from pathlib import Path
+from dotenv import load_dotenv
+from sqlalchemy import URL, create_engine, text
+
+from decimal import Decimal, ROUND_HALF_UP
+
 
 RAIZ_PROJETO = Path(__file__).resolve().parent.parent
 origem = RAIZ_PROJETO / "data" / "raw" / "vendas_raw_exportadas.csv"
@@ -200,6 +206,28 @@ print(f"\nRelatório salvo em: {destino_relatorio}")
 pasta_processed = RAIZ_PROJETO / "data" / "processed"
 pasta_processed.mkdir(parents=True, exist_ok=True)
 
+# Adequa os valores à precisão da tabela PostgreSQL.
+colunas_decimais = [
+    "preco_unitario",
+    "imposto",
+    "valor_total",
+    "custo_mercadoria",
+    "margem_percentual",
+    "receita_bruta",
+    "avaliacao",
+]
+
+for coluna in colunas_decimais:
+    df[coluna] = df[coluna].map(
+        lambda valor: Decimal(str(valor)).quantize(
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP,
+        )
+    )
+
+print("\nValores com duas casas decimais:")
+print(df[["preco_unitario", "imposto", "valor_total"]].head())
+
 # Exporta a base tratada.
 destino_tratado = pasta_processed / "vendas_tratadas.csv"
 
@@ -212,3 +240,44 @@ df.to_csv(
 
 print(f"\nBase tratada salva em: {destino_tratado}")
 print("Tamanho da base exportada:", df.shape)
+
+# Carrega as configurações de conexão.
+load_dotenv(RAIZ_PROJETO / ".env")
+
+url = URL.create(
+    drivername="postgresql+psycopg2",
+    username=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    host=os.getenv("DB_HOST"),
+    port=int(os.getenv("DB_PORT", "5432")),
+    database=os.getenv("DB_NAME"),
+)
+
+engine = create_engine(url)
+
+# Seleciona somente as 17 colunas existentes na tabela tratada.
+colunas_banco = list(nomes_colunas.values())
+dados_banco = df[colunas_banco].copy()
+
+# Atualiza a tabela dentro de uma única transação.
+with engine.begin() as conexao:
+    conexao.execute(text("DELETE FROM public.tratada_vendas;"))
+
+    dados_banco.to_sql(
+        name="tratada_vendas",
+        schema="public",
+        con=conexao,
+        if_exists="append",
+        index=False,
+    )
+
+    total = conexao.execute(
+        text("SELECT COUNT(*) FROM public.tratada_vendas;")
+    ).scalar_one()
+
+    if total != len(dados_banco):
+        raise ValueError("A quantidade carregada difere da base tratada.")
+
+print(f"\nCarga concluída: {total} vendas na tabela tratada.")
+
+engine.dispose()
