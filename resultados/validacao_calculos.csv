@@ -1,0 +1,5 @@
+verificacao,linhas_verificadas,inconsistencias
+Custo = preço × quantidade,1000,0
+Imposto = 5% do custo,1000,0
+Total = custo + imposto,1000,0
+Receita bruta = imposto,1000,0

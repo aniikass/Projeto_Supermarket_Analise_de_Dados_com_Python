@@ -164,3 +164,34 @@ for descricao, resultado in conferencias.items():
         raise ValueError(f"Falha na conferência: {descricao}")
 
 print("\nValidações concluídas sem inconsistências.")
+
+# Cria colunas derivadas para análises por período.
+df["ano_mes"] = df["data_venda"].dt.strftime("%Y-%m")
+df["dia_semana"] = df["data_venda"].dt.dayofweek
+
+print("\nColunas derivadas:")
+print(df[["data_venda", "ano_mes", "dia_semana"]].head())
+
+# Organiza os resultados das conferências de cálculo.
+relatorio = pd.DataFrame([
+    {
+        "verificacao": descricao,
+        "linhas_verificadas": len(df),
+        "inconsistencias": int((~resultado.fillna(False)).sum()),
+    }
+    for descricao, resultado in conferencias.items()
+])
+
+# Cria a pasta, caso ainda não exista.
+pasta_resultados = RAIZ_PROJETO / "resultados"
+pasta_resultados.mkdir(parents=True, exist_ok=True)
+
+destino_relatorio = pasta_resultados / "validacao_calculos.csv"
+
+relatorio.to_csv(
+    destino_relatorio,
+    index=False,
+    encoding="utf-8",
+)
+
+print(f"\nRelatório salvo em: {destino_relatorio}")
