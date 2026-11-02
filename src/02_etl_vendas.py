@@ -34,3 +34,26 @@ df = df.rename(columns=nomes_colunas)
 print("Tamanho da base:", df.shape)
 print("\nNomes das colunas:")
 print(df.columns.tolist())
+
+# Remove espaços nas extremidades dos textos.
+for coluna in df.columns:
+    df[coluna] = df[coluna].str.strip()
+
+# Converte textos vazios em valores ausentes.
+df = df.replace("", pd.NA)
+
+print("\nValores ausentes após verificar espaços e campos vazios:")
+print(df.isna().sum())
+
+# Identifica linhas totalmente iguais.
+duplicadas = df.duplicated()
+print("\nLinhas totalmente duplicadas:", duplicadas.sum())
+
+# Mantém uma ocorrência de cada linha totalmente igual.
+df = df.drop_duplicates().copy()
+
+# Verifica IDs repetidos, inclusive em linhas com valores diferentes.
+ids_repetidos = df["id_venda"].duplicated(keep=False)
+print("\nLinhas com ID de venda repetido:", ids_repetidos.sum())
+
+print("\nTamanho após remover duplicadas:", df.shape)
