@@ -195,3 +195,20 @@ relatorio.to_csv(
 )
 
 print(f"\nRelatório salvo em: {destino_relatorio}")
+
+# Cria a pasta de saída, caso ainda não exista.
+pasta_processed = RAIZ_PROJETO / "data" / "processed"
+pasta_processed.mkdir(parents=True, exist_ok=True)
+
+# Exporta a base tratada.
+destino_tratado = pasta_processed / "vendas_tratadas.csv"
+
+df.to_csv(
+    destino_tratado,
+    index=False,
+    encoding="utf-8",
+    date_format="%Y-%m-%d",
+)
+
+print(f"\nBase tratada salva em: {destino_tratado}")
+print("Tamanho da base exportada:", df.shape)
