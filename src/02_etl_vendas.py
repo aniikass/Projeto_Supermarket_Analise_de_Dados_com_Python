@@ -57,3 +57,27 @@ ids_repetidos = df["id_venda"].duplicated(keep=False)
 print("\nLinhas com ID de venda repetido:", ids_repetidos.sum())
 
 print("\nTamanho após remover duplicadas:", df.shape)
+
+# Converte as colunas numéricas e interrompe se houver texto inválido.
+colunas_numericas = [
+    "preco_unitario",
+    "quantidade",
+    "imposto",
+    "valor_total",
+    "custo_mercadoria",
+    "margem_percentual",
+    "receita_bruta",
+    "avaliacao",
+]
+
+for coluna in colunas_numericas:
+    df[coluna] = pd.to_numeric(df[coluna], errors="raise")
+
+# Confere se as quantidades são inteiras antes da conversão.
+if (df["quantidade"] % 1 != 0).any():
+    raise ValueError("Existem quantidades com casas decimais.")
+
+df["quantidade"] = df["quantidade"].astype("Int64")
+
+print("\nTipos das colunas numéricas:")
+print(df[colunas_numericas].dtypes)
