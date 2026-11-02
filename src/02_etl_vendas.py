@@ -98,3 +98,69 @@ df["hora_venda"] = pd.to_datetime(
 
 print("\nDatas e horários convertidos:")
 print(df[["id_venda", "data_venda", "hora_venda"]].head())
+
+# Verifica campos obrigatórios.
+campos_obrigatorios = [
+    "id_venda",
+    "filial",
+    "cidade",
+    "linha_produto",
+    "forma_pagamento",
+]
+
+if df[campos_obrigatorios].isna().any().any():
+    raise ValueError("Existem campos obrigatórios sem valor.")
+
+if df["id_venda"].duplicated().any():
+    raise ValueError("Existem IDs de venda repetidos.")
+
+# Verifica os limites numéricos.
+campos_nao_negativos = [
+    "preco_unitario",
+    "imposto",
+    "valor_total",
+    "custo_mercadoria",
+    "receita_bruta",
+]
+
+if (df[campos_nao_negativos] < 0).any().any():
+    raise ValueError("Existem valores negativos não permitidos.")
+
+if (df["quantidade"] <= 0).any():
+    raise ValueError("Existem quantidades iguais ou menores que zero.")
+
+if (~df["avaliacao"].between(0, 10)).any():
+    raise ValueError("Existem avaliações fora do intervalo de 0 a 10.")
+
+# Confere os cálculos com a precisão original.
+tolerancia = 0.000001
+
+conferencias = {
+    "Custo = preço × quantidade": (
+        df["custo_mercadoria"]
+        - df["preco_unitario"] * df["quantidade"]
+    ).abs() <= tolerancia,
+
+    "Imposto = 5% do custo": (
+        df["imposto"] - df["custo_mercadoria"] * 0.05
+    ).abs() <= tolerancia,
+
+    "Total = custo + imposto": (
+        df["valor_total"]
+        - (df["custo_mercadoria"] + df["imposto"])
+    ).abs() <= tolerancia,
+
+    "Receita bruta = imposto": (
+        df["receita_bruta"] - df["imposto"]
+    ).abs() <= tolerancia,
+}
+
+for descricao, resultado in conferencias.items():
+    inconsistentes = ~resultado.fillna(False)
+    print(f"\n{descricao}: {inconsistentes.sum()} inconsistências")
+
+    if inconsistentes.any():
+        print(df.loc[inconsistentes, ["id_venda"]].head())
+        raise ValueError(f"Falha na conferência: {descricao}")
+
+print("\nValidações concluídas sem inconsistências.")
