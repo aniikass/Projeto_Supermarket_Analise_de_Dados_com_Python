@@ -175,3 +175,107 @@ fig.savefig(
     dpi=150,
 )
 plt.close(fig)
+
+def salvar_grafico_barras(contagens, titulo, eixo_x, arquivo):
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    # Ordena para que a maior barra apareça no topo.
+    dados = contagens.sort_values()
+
+    barras = ax.barh(
+        dados.index,
+        dados.values,
+        color="#2874A6",
+    )
+
+    ax.set_title(titulo)
+    ax.set_xlabel(eixo_x)
+    ax.bar_label(barras, padding=4)
+    ax.set_xlim(0, dados.max() * 1.15)
+
+    fig.tight_layout()
+    fig.savefig(pasta_resultados / arquivo, dpi=150)
+    plt.close(fig)
+
+
+salvar_grafico_barras(
+    vendas_por_tipo,
+    "Quantidade de compras por tipo de cliente",
+    "Quantidade de compras",
+    "compras_por_tipo_cliente.png",
+)
+
+salvar_grafico_barras(
+    vendas_por_genero,
+    "Quantidade de compras por gênero",
+    "Quantidade de compras",
+    "compras_por_genero.png",
+)
+
+salvar_grafico_barras(
+    itens_por_linha,
+    "Quantidade de itens vendidos por linha de produto",
+    "Quantidade de itens",
+    "itens_por_linha_produto.png",
+)
+
+# Distribuição dos valores das vendas.
+fig, ax = plt.subplots(figsize=(9, 5))
+
+ax.hist(
+    dados_estatisticos["valor_total"],
+    bins=20,
+    color="#CCCCCC",
+    edgecolor="white",
+)
+
+ax.axvline(
+    dados_estatisticos["valor_total"].mean(),
+    color="#B03A2E",
+    linestyle="--",
+    label="Média",
+)
+
+ax.axvline(
+    dados_estatisticos["valor_total"].median(),
+    color="#196F3D",
+    linestyle=":",
+    label="Mediana",
+)
+
+ax.set_title("Distribuição dos valores das vendas")
+ax.set_xlabel("Valor da venda — unidade monetária da origem")
+ax.set_ylabel("Quantidade de vendas")
+ax.legend()
+
+fig.tight_layout()
+fig.savefig(pasta_resultados / "distribuicao_valor_vendas.png", dpi=150)
+plt.close(fig)
+
+
+# Distribuição das avaliações.
+fig, ax = plt.subplots(figsize=(9, 5))
+
+ax.hist(
+    df["avaliacao"].astype(float),
+    bins=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    color="#CCCCCC",
+    edgecolor="white",
+)
+
+ax.axvline(
+    avaliacao_media,
+    color="#B03A2E",
+    linestyle="--",
+    label=f"Média: {avaliacao_media:.2f}",
+)
+
+ax.set_title("Distribuição das avaliações dos clientes")
+ax.set_xlabel("Avaliação")
+ax.set_ylabel("Quantidade de avaliações")
+ax.set_xlim(0, 10)
+ax.legend()
+
+fig.tight_layout()
+fig.savefig(pasta_resultados / "distribuicao_avaliacoes.png", dpi=150)
+plt.close(fig)
