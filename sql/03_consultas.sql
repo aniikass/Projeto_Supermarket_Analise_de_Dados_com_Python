@@ -40,3 +40,11 @@ SELECT
     rating
 FROM public.raw_vendas
 ORDER BY id_raw;
+
+-- Resumo das vendas da camada tratada.
+SELECT
+    COUNT(*) AS quantidade_vendas,
+    SUM(valor_total) AS faturamento_total,
+    ROUND(AVG(avaliacao), 2) AS avaliacao_media,
+    MIN(valor_total) AS menor_venda
+FROM public.tratada_vendas;
