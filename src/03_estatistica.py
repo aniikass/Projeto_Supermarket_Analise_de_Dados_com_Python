@@ -1,7 +1,7 @@
 from decimal import Decimal
 from pathlib import Path
-
 import pandas as pd
+import matplotlib.pyplot as plt
 
 RAIZ_PROJETO = Path(__file__).resolve().parent.parent
 origem = RAIZ_PROJETO / "data" / "processed" / "vendas_tratadas.csv"
@@ -127,3 +127,51 @@ respostas.to_csv(
 )
 
 print(f"\nRespostas salvas em: {destino_respostas}")
+
+# Cria uma tabela numérica para as estatísticas descritivas.
+dados_estatisticos = pd.DataFrame({
+    "valor_total": df["valor_total"].map(float),
+    "quantidade": df["quantidade"],
+    "avaliacao": df["avaliacao"],
+})
+
+estatisticas = dados_estatisticos.describe().T.astype(float)
+
+estatisticas.to_csv(
+    pasta_resultados / "estatisticas_descritivas.csv",
+    index=True,
+    index_label="variavel",
+    encoding="utf-8-sig",
+    float_format="%.2f",
+)
+
+print("\nEstatísticas descritivas:")
+print(
+    estatisticas.to_string(
+        float_format=lambda valor: f"{valor:.2f}"
+    )
+)
+
+# Gráfico de quantidade de vendas por cidade.
+fig, ax = plt.subplots(figsize=(8, 5))
+
+barras = ax.bar(
+    vendas_por_cidade.index,
+    vendas_por_cidade.values,
+    color="#2874A6",
+)
+
+ax.set_title("Quantidade de vendas por cidade")
+ax.set_xlabel("Cidade")
+ax.set_ylabel("Quantidade de vendas")
+ax.bar_label(barras, padding=3)
+
+# Deixa espaço para os números acima das barras.
+ax.set_ylim(0, vendas_por_cidade.max() * 1.15)
+
+fig.tight_layout()
+fig.savefig(
+    pasta_resultados / "vendas_por_cidade.png",
+    dpi=150,
+)
+plt.close(fig)
